@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  miniapps:
+    build: .
+    container_name: miniapps
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9876:9876"
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - MINIAPPS_ALLOWED_USERS=8971338885
+      - PROMETHEUS_URL=http://100.65.126.126:9090
+      - GRAFANA_URL=http://100.65.126.126:3002
+      - HASS_URL=${HASS_URL}
+      - HASS_TOKEN=${HASS_TOKEN}
+      - GITLAB_API_URL=https://git.hively.dev/api/v4
+      - GITLAB_TOKEN=${GITLAB_TOKEN}
+      - HOMELAB_ANSIBLE_PROJECT_ID=113
+      - OP_SERVICE_ACCOUNT_TOKEN=${OP_SERVICE_ACCOUNT_TOKEN}
+      - OP_VAULT=Gregory
+      - OUTLINE_URL=https://doc.hively.dev/api
+      - OUTLINE_TOKEN=${OUTLINE_API_TOKEN:-}
+      - JIRA_URL=https://hivelylabs.atlassian.net
+      - JIRA_EMAIL=genehively@gmail.com
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN:-}
+    volumes:
+      # Wiki access (read-only)
+      - ${HOME}/.hermes/wiki:/wiki:ro
+      # Hermes session DB for model usage stats (read-only)
+      - ${HOME}/.hermes/sessions.db:/data/sessions.db:ro
+    networks:
+      - miniapps-net
+
+networks:
+  miniapps-net:
+    driver: bridge
