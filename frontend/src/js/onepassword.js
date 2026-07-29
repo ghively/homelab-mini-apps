@@ -1,14 +1,11 @@
 // ─── 1Password Vault Browser ───────────────────────────────────────────
 
 async function render1Password(content) {
-  let html = `
-    <div class="section">
-      <div class="section-title">1Password Vault</div>
-      <input id="1p-search" class="search-bar" placeholder="Search vault items..." oninput="debounceSearch1P()">
-    </div>
-    <div id="1p-items">${loading('Loading vault...')}</div>
+  content.innerHTML = `
+    ${pageHead('1Password', 'Read-only vault browser')}
+    <input id="1p-search" class="search-bar" placeholder="Search vault items..." oninput="debounceSearch1P()">
+    <div id="1p-items">${skeleton(3, 60)}</div>
   `;
-  content.innerHTML = html;
   await load1PItems();
 }
 
@@ -22,7 +19,7 @@ async function load1PItems() {
   const search = document.getElementById('1p-search')?.value || '';
   const container = document.getElementById('1p-items');
   if (!container) return;
-  container.innerHTML = loading();
+  container.innerHTML = skeleton(3, 60);
 
   try {
     const data = await api(`/api/1password/items${search ? '?query=' + encodeURIComponent(search) : ''}`);
@@ -55,7 +52,7 @@ async function load1PItems() {
       el.addEventListener('click', () => view1PItem(el.dataset.item));
     });
   } catch (err) {
-    container.innerHTML = `<div class="card"><p style="color:var(--destructive)">${err.message}</p></div>`;
+    container.innerHTML = errorCard(err.message);
   }
 }
 
@@ -63,15 +60,12 @@ async function view1PItem(itemId) {
   const content = document.getElementById('content');
   historyStack.push(content.innerHTML);
   tg.BackButton.show();
-  content.innerHTML = loading('Loading item...');
+  content.innerHTML = skeleton(3);
 
   try {
     const data = await api(`/api/1password/items/${itemId}`);
-    let html = `<div class="detail-back" onclick="popView()">← Back</div>`;
-    html += `<div class="card">
-      <div style="font-size:18px;font-weight:600">${data.title}</div>
-      <div style="font-size:13px;color:var(--hint)">${data.category}</div>
-    </div>`;
+    let html = `<div class="detail-back" onclick="popView()">‹ Back</div>`;
+    html += pageHead(data.title, data.category);
 
     if (data.fields.length > 0) {
       html += '<div class="card"><div class="card-header">Fields</div>';
@@ -83,7 +77,7 @@ async function view1PItem(itemId) {
           <div class="list-item">
             <div class="info">
               <div class="title">${f.label || f.id}</div>
-              <div class="subtitle" id="field-${f.id}">${maskedValue}</div>
+              <div class="subtitle mono-val" style="font-size:12px" id="field-${f.id}">${maskedValue}</div>
             </div>
             ${isSecret && f.value ? `<button class="action" onclick="revealField('${f.id}', '${btoa(f.value)}')">Show</button>` : ''}
             ${!isSecret && f.value ? `<button class="action" onclick="copyText('${btoa(f.value)}')">Copy</button>` : ''}
@@ -107,7 +101,7 @@ async function view1PItem(itemId) {
 
     content.innerHTML = html;
   } catch (err) {
-    content.innerHTML = `<div class="card"><p style="color:var(--destructive)">${err.message}</p></div>`;
+    content.innerHTML = errorCard(err.message);
   }
 }
 

@@ -3,8 +3,9 @@
 async function renderOpsRemote(content) {
   const data = await api('/api/ops-remote/hosts');
 
-  let html = '<div class="section"><div class="section-title">Quick Ops Remote</div>';
-  html += '<div class="section-desc">Tap a host to see available actions</div></div>';
+  let html = pageHead('Remote', 'Tap a host to see available actions', [
+    { label: 'Hosts', value: data.hosts.length },
+  ]);
 
   // Host selector
   html += '<div class="host-grid">';
@@ -13,7 +14,7 @@ async function renderOpsRemote(content) {
       <div class="host-card" data-host="${host.name}">
         <div class="name">${host.name}</div>
         <div class="ip">${host.role}</div>
-        <div class="metric" style="margin-top:4px">${host.actions.length} actions</div>
+        <div class="metric" style="margin-top:8px">${host.actions.length} actions</div>
       </div>
     `;
   }
@@ -30,13 +31,13 @@ async function viewHostActions(host) {
   const content = document.getElementById('content');
   historyStack.push(content.innerHTML);
   tg.BackButton.show();
-  content.innerHTML = loading(`Loading ${host} actions...`);
+  content.innerHTML = skeleton(3);
 
   try {
     const data = await api(`/api/ops-remote/actions/${host}`);
 
-    let html = `<div class="detail-back" onclick="popView()">← Back</div>`;
-    html += `<div class="section-title">${host}</div>`;
+    let html = `<div class="detail-back" onclick="popView()">‹ Back</div>`;
+    html += pageHead(host, `${data.actions.length} actions available`);
     html += '<div class="action-grid">';
 
     for (const action of data.actions) {
@@ -57,7 +58,7 @@ async function viewHostActions(host) {
     html += '</div>';
 
     // Output area
-    html += '<div id="ops-output"></div>';
+    html += '<div id="ops-output" style="margin-top:12px"></div>';
 
     content.innerHTML = html;
 
@@ -65,7 +66,7 @@ async function viewHostActions(host) {
       el.addEventListener('click', () => executeOpsAction(el.dataset.host, el.dataset.action));
     });
   } catch (err) {
-    content.innerHTML = `<div class="card"><p style="color:var(--destructive)">${err.message}</p></div>`;
+    content.innerHTML = errorCard(err.message);
   }
 }
 
@@ -78,15 +79,15 @@ async function executeOpsAction(host, actionId) {
     const log = output.querySelector('.output-log');
 
     if (result.success) {
-      log.innerHTML = `${result.stdout || '(no output)'}`;
-      log.style.color = '#0f0';
+      log.textContent = result.stdout || '(no output)';
+      log.classList.remove('err');
       tg.HapticFeedback.notificationOccurred('success');
     } else {
-      log.innerHTML = `EXIT CODE: ${result.exit_code}\n\nSTDERR:\n${result.stderr || ''}\n\nSTDOUT:\n${result.stdout || ''}`;
-      log.style.color = '#f00';
+      log.textContent = `EXIT CODE: ${result.exit_code}\n\nSTDERR:\n${result.stderr || ''}\n\nSTDOUT:\n${result.stdout || ''}`;
+      log.classList.add('err');
       tg.HapticFeedback.notificationOccurred('error');
     }
   } catch (err) {
-    output.innerHTML = `<div class="card"><p style="color:var(--destructive)">${err.message}</p></div>`;
+    output.innerHTML = errorCard(err.message);
   }
 }

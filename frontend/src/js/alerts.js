@@ -4,56 +4,40 @@ async function renderAlerts(content) {
   const data = await api('/api/alerts/active');
   const total = data.total;
 
-  let html = `<div class="section">
-    <div class="section-title">Active Alerts</div>
-    <div class="section-desc">${total} alert${total !== 1 ? 's' : ''} firing</div>
-  </div>`;
+  let html = pageHead('Alerts', 'Triage & silences', [
+    { label: 'Firing', value: total, dot: total > 0 ? 'red pulse' : 'green' },
+  ]);
 
   if (total === 0) {
     html += empty('✅', 'All clear — no active alerts');
-    content.innerHTML = html;
-    return;
   }
 
-  // Alertmanager alerts
+  const alertItem = (a, sinceIso) => {
+    const critical = a.severity === 'critical';
+    return `
+      <div class="alert-item ${critical ? 'critical' : ''}">
+        <div class="info">
+          <div class="title">${a.name}</div>
+          <div class="subtitle">${a.summary || a.description || ''}</div>
+          <div class="subtitle" style="margin-top:3px">${a.instance} · since ${timeAgo(sinceIso)}</div>
+        </div>
+        <span class="badge ${critical ? 'danger' : 'warning'}">${a.severity}</span>
+      </div>
+    `;
+  };
+
   if (data.alertmanager.length > 0) {
-    html += '<div class="card"><div class="card-header">Alertmanager</div>';
-    for (const a of data.alertmanager) {
-      const sevClass = a.severity === 'critical' ? 'danger' : 'warning';
-      html += `
-        <div class="list-item">
-          <div class="info">
-            <div class="title">${a.name}</div>
-            <div class="subtitle">${a.summary || a.description}</div>
-            <div class="subtitle">${a.instance} · since ${timeAgo(a.starts_at)}</div>
-          </div>
-          <span class="badge ${sevClass}">${a.severity}</span>
-        </div>
-      `;
-    }
+    html += '<div class="section"><div class="section-title">Alertmanager</div>';
+    html += data.alertmanager.map(a => alertItem(a, a.starts_at)).join('');
     html += '</div>';
   }
 
-  // Prometheus alerts
   if (data.prometheus_firing.length > 0) {
-    html += '<div class="card"><div class="card-header">Prometheus (firing)</div>';
-    for (const a of data.prometheus_firing) {
-      const sevClass = a.severity === 'critical' ? 'danger' : 'warning';
-      html += `
-        <div class="list-item">
-          <div class="info">
-            <div class="title">${a.name}</div>
-            <div class="subtitle">${a.summary || ''}</div>
-            <div class="subtitle">${a.instance} · since ${timeAgo(a.active_at)}</div>
-          </div>
-          <span class="badge ${sevClass}">${a.severity}</span>
-        </div>
-      `;
-    }
+    html += '<div class="section"><div class="section-title">Prometheus (firing)</div>';
+    html += data.prometheus_firing.map(a => alertItem(a, a.active_at)).join('');
     html += '</div>';
   }
 
-  // Silence button
   html += `<button class="btn secondary" onclick="viewSilenceForm()">Create Silence</button>`;
   html += `<button class="btn secondary" onclick="viewSilences()">View Active Silences</button>`;
 
@@ -66,10 +50,10 @@ async function viewSilenceForm() {
   tg.BackButton.show();
 
   content.innerHTML = `
-    <div class="detail-back" onclick="popView()">← Back</div>
+    <div class="detail-back" onclick="popView()">‹ Back</div>
     <div class="card">
       <div class="card-header">Create Silence</div>
-      <div class="section-desc">Suppress alerts matching a label</div>
+      <div class="section-desc" style="padding:0">Suppress alerts matching a label</div>
       <input id="silence-matcher-name" class="search-bar" placeholder="Label name (e.g. alertname)" value="alertname">
       <input id="silence-matcher-value" class="search-bar" placeholder="Label value (e.g. HighCPU)">
       <input id="silence-duration" class="search-bar" type="number" placeholder="Duration (minutes)" value="60">
@@ -107,15 +91,15 @@ async function viewSilences() {
   const content = document.getElementById('content');
   historyStack.push(content.innerHTML);
   tg.BackButton.show();
-  content.innerHTML = loading('Loading silences...');
+  content.innerHTML = skeleton(3);
 
   try {
     const data = await api('/api/alerts/silences');
-    let html = `<div class="detail-back" onclick="popView()">← Back</div>`;
+    let html = `<div class="detail-back" onclick="popView()">‹ Back</div>`;
     html += '<div class="card"><div class="card-header">Active Silences</div>';
 
     if (data.silences.length === 0) {
-      html += '<p style="color:var(--hint)">No active silences</p>';
+      html += '<p style="color:var(--hint);font-size:13px">No active silences</p>';
     } else {
       for (const s of data.silences) {
         html += `
@@ -123,7 +107,7 @@ async function viewSilences() {
             <div class="info">
               <div class="title">${s.comment || 'Silenced'}</div>
               <div class="subtitle">By ${s.createdBy} · until ${new Date(s.endsAt).toLocaleString()}</div>
-              <div class="subtitle">${s.matchers.map(m => `${m.name}=${m.value}`).join(', ')}</div>
+              <div class="subtitle mono-val" style="font-size:11px">${s.matchers.map(m => `${m.name}=${m.value}`).join(', ')}</div>
             </div>
           </div>
         `;
@@ -132,6 +116,6 @@ async function viewSilences() {
     html += '</div>';
     content.innerHTML = html;
   } catch (err) {
-    content.innerHTML = `<div class="card"><p style="color:var(--destructive)">${err.message}</p></div>`;
+    content.innerHTML = errorCard(err.message);
   }
 }

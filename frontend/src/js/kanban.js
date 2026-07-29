@@ -1,7 +1,7 @@
 // ─── Jira OPS Kanban Board ─────────────────────────────────────────────
 
 async function renderKanban(content) {
-  content.innerHTML = loading('Loading board...');
+  content.innerHTML = skeleton(3);
   try {
     const data = await api('/api/kanban/jira/board');
     const cols = Object.entries(data.columns);
@@ -11,21 +11,27 @@ async function renderKanban(content) {
       return;
     }
 
-    let html = '<div class="kanban-board">';
+    const totalIssues = cols.reduce((n, [, issues]) => n + issues.length, 0);
+    let html = pageHead('Kanban', 'Ops board', [
+      { label: 'Issues', value: totalIssues },
+      { label: 'Columns', value: cols.length },
+    ]);
+
+    html += '<div class="kanban-board">';
     for (const [status, issues] of cols) {
       html += `<div class="kanban-col">
-        <div class="kanban-col-header">${status} (${issues.length})</div>`;
+        <div class="kanban-col-header">${status} <span class="count">${issues.length}</span></div>`;
       for (const issue of issues) {
         const priColors = {'Highest':'danger','High':'warning','Medium':'info','Low':'info','Lowest':'info'};
         const priClass = priColors[issue.priority] || 'info';
-        const labels = issue.labels.map(l => `<span class="badge info" style="margin-right:4px">${l}</span>`).join('');
+        const labels = issue.labels.map(l => `<span class="badge info plain">${l}</span>`).join('');
         html += `<div class="kanban-card" data-key="${issue.key}">
           <div class="key">${issue.key}</div>
           <div class="summary">${issue.summary}</div>
           <div class="meta">
             <span class="badge ${priClass}">${issue.priority}</span>
             ${labels}
-            <br><span style="font-size:11px">${issue.assignee} · ${timeAgo(issue.updated)}</span>
+            <div style="margin-top:5px">${issue.assignee} · ${timeAgo(issue.updated)}</div>
           </div>
         </div>`;
       }
@@ -39,8 +45,7 @@ async function renderKanban(content) {
       el.addEventListener('click', () => viewIssueDetail(el.dataset.key));
     });
   } catch (err) {
-    content.innerHTML = `<div class="card"><p style="color:var(--destructive)">${err.message}</p>
-      <p style="font-size:13px;color:var(--hint);margin-top:8px">Make sure JIRA_API_TOKEN and JIRA_EMAIL are set.</p></div>`;
+    content.innerHTML = errorCard(err.message, 'Make sure JIRA_API_TOKEN and JIRA_EMAIL are set.');
   }
 }
 
@@ -48,7 +53,7 @@ async function viewIssueDetail(key) {
   const content = document.getElementById('content');
   historyStack.push(content.innerHTML);
   tg.BackButton.show();
-  content.innerHTML = loading('Loading issue...');
+  content.innerHTML = skeleton(3);
 
   try {
     const [transitions, boardData] = await Promise.all([
@@ -63,10 +68,10 @@ async function viewIssueDetail(key) {
       if (issue) break;
     }
 
-    let html = `<div class="detail-back" onclick="popView()">← Back</div>`;
+    let html = `<div class="detail-back" onclick="popView()">‹ Back</div>`;
     html += `<div class="card">
-      <div style="font-size:12px;color:var(--accent);font-weight:600">${issue.key}</div>
-      <div style="font-size:16px;font-weight:600;margin-top:4px">${issue.summary}</div>
+      <div class="key mono-val" style="font-size:12px;color:var(--accent);font-weight:700">${issue.key}</div>
+      <div style="font-size:16px;font-weight:700;margin-top:4px">${issue.summary}</div>
       <div style="font-size:13px;color:var(--hint);margin-top:8px">
         ${issue.assignee} · ${issue.priority} · Updated ${timeAgo(issue.updated)}
       </div>
@@ -84,13 +89,13 @@ async function viewIssueDetail(key) {
     // Comment
     html += `<div class="card">
       <div class="card-header">Add Comment</div>
-      <textarea id="comment-text" class="search-bar" style="min-height:60px;margin-bottom:8px" placeholder="Type a comment..."></textarea>
+      <textarea id="comment-text" class="search-bar" style="min-height:64px" placeholder="Type a comment..."></textarea>
       <button class="btn" onclick="addComment('${key}')">Add Comment</button>
     </div>`;
 
     content.innerHTML = html;
   } catch (err) {
-    content.innerHTML = `<div class="card"><p style="color:var(--destructive)">${err.message}</p></div>`;
+    content.innerHTML = errorCard(err.message);
   }
 }
 

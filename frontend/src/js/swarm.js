@@ -1,17 +1,11 @@
 // Swarm Monitor — read-only GitLab + Prometheus source envelopes
 async function renderSwarm(content) {
   const data = await api('/api/swarm/');
+  const allHealthy = data.summary.healthy_sources === data.summary.total_sources;
 
-  let html = `
-    <div class="card">
-      <div class="card-header">Swarm Monitor — Source Overview</div>
-      <div style="display:flex;gap:12px;align-items:center;">
-        <span class="badge ${data.summary.healthy_sources === data.summary.total_sources ? 'success' : 'warning'}">
-          ${data.summary.healthy_sources}/${data.summary.total_sources} healthy
-        </span>
-      </div>
-    </div>
-  `;
+  let html = pageHead('Swarm Monitor', 'Source envelope health', [
+    { label: 'Healthy', value: `${data.summary.healthy_sources}/${data.summary.total_sources}`, dot: allHealthy ? 'green' : 'yellow' },
+  ]);
 
   for (const source of data.sources) {
     const statusClass = source.status === 'ok' ? 'success'
@@ -33,7 +27,7 @@ async function renderSwarm(content) {
         sourceData = `
           <div>Hosts up: ${source.data.hosts_up}/${source.data.hosts_total}</div>
           ${source.data.hosts ? source.data.hosts.map(h =>
-            `<div style="margin-left:12px;">${h.status === 'up' ? '✅' : '❌'} ${h.instance}</div>`
+            `<div class="source-host">${statusDot(h.status === 'up')} ${h.instance}</div>`
           ).join('') : ''}
         `;
       }

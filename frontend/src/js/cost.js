@@ -1,7 +1,7 @@
 // ─── Cost / Quota Monitor ──────────────────────────────────────────────
 
 async function renderCost(content) {
-  content.innerHTML = loading('Loading metrics...');
+  content.innerHTML = skeleton(4);
   try {
     const [overview, models, oci] = await Promise.all([
       api('/api/cost/overview'),
@@ -9,30 +9,37 @@ async function renderCost(content) {
       api('/api/cost/oci'),
     ]);
 
-    let html = '';
+    let html = pageHead('Cost', 'Usage, quotas & free-tier limits', [
+      { label: 'Containers', value: overview.container_count },
+    ]);
 
     // OCI free tier status
+    const arm = oci['gh-arm'];
     html += '<div class="section"><div class="section-title">OCI Free Tier (gh-arm)</div>';
-    html += '<div class="card">';
-    html += `<div class="list-item"><div class="info"><div class="title">Disk</div></div><div style="color:${pctColor(oci['gh-arm'].disk_pct)}">${oci['gh-arm'].disk_pct}%</div></div>`;
-    html += `${progress(oci['gh-arm'].disk_pct)}`;
-    html += `<div class="list-item"><div class="info"><div class="title">CPU</div></div><div style="color:${pctColor(oci['gh-arm'].cpu_pct)}">${oci['gh-arm'].cpu_pct}%</div></div>`;
-    html += `${progress(oci['gh-arm'].cpu_pct)}`;
-    html += `<div class="list-item"><div class="info"><div class="title">Memory</div></div><div style="color:${pctColor(oci['gh-arm'].mem_pct)}">${oci['gh-arm'].mem_pct}%</div></div>`;
-    html += `${progress(oci['gh-arm'].mem_pct)}`;
-    html += `<div class="subtitle" style="margin-top:8px">${oci['gh-arm'].compute_limit}</div>`;
-    html += '</div></div>';
+    html += `<div class="gauge-row">
+      ${gauge('Disk', arm.disk_pct)}
+      ${gauge('CPU', arm.cpu_pct)}
+      ${gauge('Memory', arm.mem_pct)}
+    </div>`;
+    html += `<div class="section-desc">${arm.compute_limit}</div>`;
+    html += '</div>';
 
     // Network
     html += '<div class="section"><div class="section-title">Network (all hosts)</div>';
-    html += '<div class="card">';
-    html += `<div class="list-item"><div class="info"><div class="title">Download</div></div><div>${overview.network.rx_mbps} Mbps</div></div>`;
-    html += `<div class="list-item"><div class="info"><div class="title">Upload</div></div><div>${overview.network.tx_mbps} Mbps</div></div>`;
-    html += `<div class="subtitle" style="margin-top:8px">${overview.container_count} containers running across fleet</div>`;
-    html += '</div></div>';
+    html += `<div class="stat-grid">
+      <div class="stat-tile">
+        <div class="stat-label">Download</div>
+        <div class="stat-value">${overview.network.rx_mbps} <small>Mbps</small></div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Upload</div>
+        <div class="stat-value">${overview.network.tx_mbps} <small>Mbps</small></div>
+      </div>
+    </div>`;
+    html += '</div>';
 
     // Host resource usage
-    html += '<div class="section"><div class="section-title">Host CPU/Memory</div>';
+    html += '<div class="section"><div class="section-title">Host CPU / Memory</div>';
     html += '<div class="card">';
     for (const h of overview.host_cpu) {
       const ip = h.instance.split(':')[0];
@@ -42,8 +49,8 @@ async function renderCost(content) {
       html += `
         <div class="list-item">
           <div class="info">
-            <div class="title">${ip}</div>
-            <div class="subtitle">CPU: <span style="color:${pctColor(cpuPct)}">${cpuPct}%</span> · MEM: <span style="color:${pctColor(memPct)}">${memPct}%</span></div>
+            <div class="title mono-val" style="font-size:13px">${ip}</div>
+            <div class="subtitle">CPU <span class="mono-val" style="color:${pctColor(cpuPct)}">${cpuPct}%</span> · MEM <span class="mono-val" style="color:${pctColor(memPct)}">${memPct}%</span></div>
           </div>
         </div>
       `;
@@ -72,13 +79,13 @@ async function renderCost(content) {
       html += '<div class="section"><div class="section-title">Top Containers (memory)</div>';
       html += '<div class="card">';
       for (const c of overview.containers.slice(0, 10)) {
-        html += `<div class="list-item"><div class="info"><div class="title">${c.name}</div><div class="subtitle">${c.memory_mb} MB</div></div></div>`;
+        html += `<div class="list-item"><div class="info"><div class="title">${c.name}</div></div><div class="mono-val" style="color:var(--hint)">${c.memory_mb} MB</div></div>`;
       }
       html += '</div></div>';
     }
 
     content.innerHTML = html;
   } catch (err) {
-    content.innerHTML = `<div class="card"><p style="color:var(--destructive)">${err.message}</p></div>`;
+    content.innerHTML = errorCard(err.message);
   }
 }

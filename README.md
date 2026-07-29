@@ -7,7 +7,7 @@ A secure Telegram Mini Apps platform for managing homelab infrastructure from yo
 ```
 ┌─────────────────────────────────────────────┐
 │  Telegram WebApp (Frontend)                 │
-│  HTML/CSS/JS + Gregory Observatory tokens   │
+│  HTML/CSS/JS + Observatory design system    │
 │  ↕ Authorization: tma <initData>            │
 ├─────────────────────────────────────────────┤
 │  FastAPI Backend (Python 3.12)              │
@@ -66,12 +66,15 @@ Every data source returns a `SourceEnvelope[T]` — a normalized wrapper that ca
 
 ## Design System
 
-The **Gregory Observatory** design system provides:
+The **Observatory** design system provides:
 
 - **Semantic status tokens**: `--status-healthy`, `--status-attention`, `--status-degraded`, `--status-critical`, `--status-unknown`, `--status-verified`, `--status-unverified`
-- **Telegram-native foundations**: All colors derive from `tg-theme-*` CSS variables, so the app automatically matches the user's Telegram theme (light/dark)
+- **Telegram-native foundations**: All colors derive from `tg-theme-*` CSS variables, so the app automatically matches the user's Telegram theme; surfaces and borders are derived with `color-mix` so light and dark themes both work from one palette
+- **Home-screen launcher**: A tile grid of all mini apps with inline SVG glyphs and per-app accent colors, plus a sticky glass top bar with back/refresh inside each app
+- **Component library**: cards, stat chips, badges with status dots, skeleton loaders, ring gauges, toggle switches, segmented controls, alert cards with severity accents, diff viewer, and terminal output — all vanilla CSS, no build step
 - **Safe-area support**: `env(safe-area-inset-*)` handling for iPhone notch/home indicator
 - **System font stack**: No external font dependencies — uses the device's native UI font
+- **Reduced-motion support**: All animation collapses under `prefers-reduced-motion`
 
 ### TypeScript Design System Package
 
@@ -127,7 +130,7 @@ homelab-mini-apps/
 └── frontend/
     ├── index.html
     ├── src/
-    │   ├── css/app.css        # Gregory Observatory design tokens + styles
+    │   ├── css/app.css        # Observatory design tokens + component styles
     │   └── js/
     │       ├── app.js         # App shell, navigation, auth
     │       ├── swarm.js       # Swarm Monitor view

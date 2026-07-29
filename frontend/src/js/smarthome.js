@@ -1,11 +1,16 @@
 // ─── Smart Home Control ────────────────────────────────────────────────
 
 async function renderSmarthome(content) {
-  content.innerHTML = loading('Loading entities...');
+  content.innerHTML = skeleton(4);
   try {
     const data = await api('/api/smarthome/states');
     const domains = Object.keys(data.entities).sort();
-    let html = '';
+    const totalEntities = domains.reduce((n, d) => n + data.entities[d].length, 0);
+
+    let html = pageHead('Home', 'Home Assistant control', [
+      { label: 'Entities', value: totalEntities },
+      { label: 'Domains', value: domains.length },
+    ]);
 
     // Quick scene buttons
     html += '<div class="section"><div class="section-title">Quick Actions</div>';
@@ -18,26 +23,28 @@ async function renderSmarthome(content) {
       const entities = data.entities[domain];
       if (entities.length === 0) continue;
 
-      html += `<div class="section"><div class="section-title">${domain} (${entities.length})</div>`;
+      html += `<div class="section"><div class="section-title" style="text-transform:capitalize">${domain} <span style="color:var(--hint);font-weight:500;font-size:13px">${entities.length}</span></div>`;
       html += '<div class="card">';
 
       for (const e of entities) {
         const isOn = e.state === 'on';
         const canToggle = ['light', 'switch', 'input_boolean'].includes(domain);
 
-        let stateBadge;
-        if (isOn) stateBadge = '<span class="badge success">ON</span>';
-        else if (e.state === 'off') stateBadge = '<span class="badge info">OFF</span>';
-        else stateBadge = `<span class="badge info">${e.state}</span>`;
+        let stateBadge = '';
+        if (!canToggle) {
+          if (isOn) stateBadge = '<span class="badge success">ON</span>';
+          else if (e.state === 'off') stateBadge = '<span class="badge unknown plain">OFF</span>';
+          else stateBadge = `<span class="badge info plain">${e.state}</span>`;
+        }
 
         html += `
           <div class="list-item" data-entity="${e.entity_id}">
             <div class="info">
               <div class="title">${e.friendly_name}</div>
-              <div class="subtitle">${e.entity_id} · ${e.state}</div>
+              <div class="subtitle mono-val" style="font-size:11px">${e.entity_id}</div>
             </div>
             ${stateBadge}
-            ${canToggle ? `<button class="action" onclick="toggleEntity('${e.entity_id}', ${isOn})">${isOn ? 'Off' : 'On'}</button>` : ''}
+            ${canToggle ? `<button class="switch ${isOn ? 'on' : ''}" aria-label="Toggle ${e.friendly_name}" onclick="toggleEntity('${e.entity_id}', ${isOn})"></button>` : ''}
           </div>
         `;
       }
@@ -46,18 +53,17 @@ async function renderSmarthome(content) {
 
     content.innerHTML = html;
   } catch (err) {
-    content.innerHTML = `<div class="card">
-      <p style="color:var(--destructive)">${err.message}</p>
-      <p style="font-size:13px;color:var(--hint);margin-top:8px">HASS_URL and HASS_TOKEN must be set.</p>
-    </div>`;
+    content.innerHTML = errorCard(err.message, 'HASS_URL and HASS_TOKEN must be set.');
   }
 }
 
 async function toggleEntity(entityId, isOn) {
   const domain = entityId.split('.')[0];
   const service = isOn ? 'turn_off' : 'turn_on';
+  // Flip the switch immediately for feedback, then reload real state
+  const sw = document.querySelector(`[data-entity="${entityId}"] .switch`);
+  if (sw) sw.classList.toggle('on');
   await callService(domain, service, { entity_id: entityId });
-  // Reload
   await renderSmarthome(document.getElementById('content'));
 }
 
