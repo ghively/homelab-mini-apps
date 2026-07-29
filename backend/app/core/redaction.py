@@ -85,7 +85,7 @@ class Redactor:
         # Environment secrets: KEY=value with secret key names
         cls.PATTERNS[RedactionClass.ENV_SECRET] = re.compile(
             r"\b(?:TELEGRAM_BOT_TOKEN|GITLAB_TOKEN|JIRA_API_TOKEN|HASS_TOKEN|"
-            r"GRAFANA_API_KEY|OP_SERVICE_ACCOUNT_TOKEN|VIKUNJA_TOKEN|OUTLINE_TOKEN|"
+            r"GRAFANA_API_KEY|OP_SERVICE_ACCOUNT_TOKEN|VIKUNJA_TOKEN|OUTLINE_TOKEN|JELLYFIN_API_KEY|"
             r"OPENAI_API_KEY|ANTHROPIC_API_KEY|GROQ_API_KEY)=[^\s]+",
             re.IGNORECASE,
         )

@@ -19,7 +19,7 @@ A secure Telegram Mini Apps platform for managing homelab infrastructure from yo
 │  ├─ Alert triage (Alertmanager + Prometheus)│
 │  ├─ Kanban board (Hermes native Kanban)     │
 │  ├─ Remote ops (SSH command execution)      │
-│  ├─ 1Password vault browser                 │
+│  ├─ Media (Jellyfin + HA casting)           │
 │  ├─ Smart home (Home Assistant)             │
 │  ├─ Cost tracking                           │
 │  └─ Wiki browser                            │
@@ -47,7 +47,7 @@ Every data source returns a `SourceEnvelope[T]` — a normalized wrapper that ca
 - **Allowlist**: Only configured Telegram user IDs can access the API.
 - **Redaction layer**: A pattern-based redactor strips secrets (tokens, API keys, passwords) from all responses and logs.
 - **CORS locked**: Only Telegram webview origins are allowed.
-- **No secret mounts**: The container does not mount SSH keys or 1Password config. Secrets are passed as environment variables only.
+- **No secret mounts**: The container does not mount SSH keys or credential stores. Secrets are passed as environment variables only.
 
 ## Apps
 
@@ -59,7 +59,7 @@ Every data source returns a `SourceEnvelope[T]` — a normalized wrapper that ca
 | **Kanban** | 📋 | Hermes native Kanban task board |
 | **Alerts** | 🚨 | Active alerts from Alertmanager + Prometheus, silence management |
 | **Remote** | ⚡ | Execute predefined SSH commands on fleet hosts |
-| **1Password** | 🔑 | Browse vault items (metadata only, no secrets displayed) |
+| **Media** | 🎬 | Latest movies & shows from Jellyfin, cast to Home Assistant media players |
 | **Home** | 🏠 | Home Assistant entity control |
 | **Cost** | 📊 | Cloud spending tracker |
 | **Wiki** | 📚 | Browse homelab documentation wiki |
@@ -90,7 +90,7 @@ Located in `frontend/packages/design-system/`, the TypeScript package provides:
 
 ```
 homelab-mini-apps/
-├── Dockerfile                 # Container image (Python 3.12-slim + 1Password CLI)
+├── Dockerfile                 # Container image (Python 3.12-slim)
 ├── docker-compose.yml         # Compose definition (no secret mounts)
 ├── backend/
 │   ├── requirements.txt
@@ -112,7 +112,7 @@ homelab-mini-apps/
 │   │   │   ├── alerts.py      # Alertmanager alerts + silences
 │   │   │   ├── kanban.py      # Hermes Kanban integration
 │   │   │   ├── ops_remote.py  # Remote SSH commands
-│   │   │   ├── onepassword.py # 1Password vault browser
+│   │   │   ├── media.py       # Jellyfin latest + HA casting
 │   │   │   ├── smarthome.py   # Home Assistant control
 │   │   │   ├── cost.py        # Cost tracking
 │   │   │   └── wiki.py        # Wiki browser
@@ -139,7 +139,7 @@ homelab-mini-apps/
     │       ├── alerts.js      # Alerts view
     │       ├── kanban.js      # Kanban view
     │       ├── ops-remote.js  # Remote ops view
-    │       ├── onepassword.js # 1Password view
+    │       ├── media.js       # Media shelves + cast view
     │       ├── smarthome.js   # Smart home view
     │       ├── cost.js        # Cost view
     │       └── wiki.js        # Wiki view
@@ -169,8 +169,8 @@ homelab-mini-apps/
 | `GRAFANA_URL` | No | Grafana URL for dashboard links |
 | `HASS_URL` | No | Home Assistant URL |
 | `HASS_TOKEN` | No | Home Assistant long-lived token |
-| `OP_SERVICE_ACCOUNT_TOKEN` | No | 1Password service account token |
-| `OP_VAULT` | No | 1Password vault name |
+| `JELLYFIN_URL` | No | Jellyfin base URL (defaults to gh-media) |
+| `JELLYFIN_API_KEY` | No | Jellyfin API key for the Media app |
 | `OUTLINE_URL` | No | Outline wiki URL |
 | `OUTLINE_TOKEN` | No | Outline API token |
 

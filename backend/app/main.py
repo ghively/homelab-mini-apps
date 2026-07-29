@@ -1,15 +1,16 @@
 """Homelab Mini Apps Hub — unified Telegram Mini App platform.
 
-Serves 9 mini apps under a single FastAPI backend:
-  1. IaC Pipeline Approval Gate
-  2. Fleet Health Dashboard
-  3. Jira OPS Kanban Board
-  4. Alert Triage Console
-  5. Quick Ops Remote
-  6. 1Password Vault Browser
-  7. Smart Home Control
-  8. Cost/Quota Monitor
-  9. Wiki/Knowledge Reader
+Serves 10 mini apps under a single FastAPI backend:
+  1. Swarm Monitor
+  2. IaC Pipeline Approval Gate
+  3. Fleet Health Dashboard
+  4. Jira OPS Kanban Board
+  5. Alert Triage Console
+  6. Quick Ops Remote
+  7. Media (Jellyfin + Home Assistant casting)
+  8. Smart Home Control
+  9. Cost/Quota Monitor
+  10. Wiki/Knowledge Reader
 """
 
 import os
@@ -28,7 +29,7 @@ from app.api import (
     kanban,
     alerts,
     ops_remote,
-    onepassword,
+    media,
     smarthome,
     cost,
     wiki,
@@ -77,7 +78,7 @@ async def health():
             "kanban",
             "alerts",
             "ops-remote",
-            "1password",
+            "media",
             "smarthome",
             "cost",
             "wiki",
@@ -105,7 +106,7 @@ app.include_router(fleet.router, prefix="/api/fleet", tags=["fleet"])
 app.include_router(kanban.router, prefix="/api/kanban", tags=["kanban"])
 app.include_router(alerts.router, prefix="/api/alerts", tags=["alerts"])
 app.include_router(ops_remote.router, prefix="/api/ops-remote", tags=["ops-remote"])
-app.include_router(onepassword.router, prefix="/api/1password", tags=["1password"])
+app.include_router(media.router, prefix="/api/media", tags=["media"])
 app.include_router(smarthome.router, prefix="/api/smarthome", tags=["smarthome"])
 app.include_router(cost.router, prefix="/api/cost", tags=["cost"])
 app.include_router(wiki.router, prefix="/api/wiki", tags=["wiki"])

@@ -37,10 +37,10 @@ async function renderFleet(content) {
           <span class="status-dot ${dotClass}" style="margin-top:5px"></span>
         </div>
         ${up ? `
-          <div class="metrics">
-            <div class="metric">CPU <span style="color:${pctColor(cpu)}">${cpu}%</span></div>
-            <div class="metric">MEM <span style="color:${pctColor(mem)}">${mem}%</span></div>
-            <div class="metric">DSK <span style="color:${pctColor(disk)}">${disk}%</span></div>
+          <div class="mini-meters">
+            ${miniMeter('CPU', cpu)}
+            ${miniMeter('MEM', mem)}
+            ${miniMeter('DSK', disk)}
           </div>
         ` : '<div class="metric" style="color:var(--status-critical);margin-top:10px;font-weight:700;">OFFLINE</div>'}
       </div>

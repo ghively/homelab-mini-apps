@@ -17,9 +17,10 @@ async function renderKanban(content) {
       { label: 'Columns', value: cols.length },
     ]);
 
+    const colPalette = ['#8b93a3', '#5b8def', '#ffcf3f', '#b07ce8', '#34d178'];
     html += '<div class="kanban-board">';
-    for (const [status, issues] of cols) {
-      html += `<div class="kanban-col">
+    cols.forEach(([status, issues], ci) => {
+      html += `<div class="kanban-col" style="--col:${colPalette[ci % colPalette.length]}">
         <div class="kanban-col-header">${status} <span class="count">${issues.length}</span></div>`;
       for (const issue of issues) {
         const priColors = {'Highest':'danger','High':'warning','Medium':'info','Low':'info','Lowest':'info'};
@@ -36,7 +37,7 @@ async function renderKanban(content) {
         </div>`;
       }
       html += '</div>';
-    }
+    });
     html += '</div>';
 
     content.innerHTML = html;

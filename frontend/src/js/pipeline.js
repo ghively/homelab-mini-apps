@@ -10,7 +10,7 @@ async function renderPipeline(content) {
 
   html += '<div class="section"><div class="section-title">Merge Requests</div>';
   if (data.merge_requests.length === 0) {
-    html += empty('✅', 'No open merge requests');
+    html += empty('✅', 'No open merge requests', 'ok');
   } else {
     for (const mr of data.merge_requests) {
       const pstatus = pipelineBadge(mr.pipeline_status);

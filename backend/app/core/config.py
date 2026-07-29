@@ -29,9 +29,9 @@ JIRA_API_TOKEN = os.environ.get("JIRA_API_TOKEN", "")
 VIKUNJA_URL = os.environ.get("VIKUNJA_URL", "http://100.65.126.126:3456/api/v1")
 VIKUNJA_TOKEN = os.environ.get("VIKUNJA_TOKEN", "")
 
-# 1Password
-OP_SERVICE_ACCOUNT_TOKEN = os.environ.get("OP_SERVICE_ACCOUNT_TOKEN", "")
-OP_VAULT = os.environ.get("OP_VAULT", "Gregory")
+# Media (Jellyfin on gh-media)
+JELLYFIN_URL = os.environ.get("JELLYFIN_URL", "http://100.116.139.100:8096")
+JELLYFIN_API_KEY = os.environ.get("JELLYFIN_API_KEY", "")
 
 # Outline
 OUTLINE_URL = os.environ.get("OUTLINE_URL", "https://doc.hively.dev/api")

@@ -9,7 +9,7 @@ async function renderAlerts(content) {
   ]);
 
   if (total === 0) {
-    html += empty('✅', 'All clear — no active alerts');
+    html += empty('✅', 'All clear — no active alerts', 'ok');
   }
 
   const alertItem = (a, sinceIso) => {
