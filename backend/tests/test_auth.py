@@ -7,7 +7,7 @@ Tests verify:
 - Replay prevention for write operations
 - Role model enforcement
 - Fail-closed behavior for forged/missing/malformed/stale/replayed auth
-- Owner identity 8971338885 preserved
+- Owner identity 111111111 preserved
 """
 
 import pytest
@@ -30,7 +30,7 @@ from app.core.auth_secure import (
 from app.core.config import BOT_TOKEN
 
 
-def create_valid_init_data(bot_token: str, user_id: int = 8971338885, age_seconds: int = 60) -> str:
+def create_valid_init_data(bot_token: str, user_id: int = 111111111, age_seconds: int = 60) -> str:
     """Create valid Telegram initData for testing.
 
     Args:
@@ -77,7 +77,7 @@ class TestValidateInitData:
         """Test validation of valid initData."""
         # Since we can't easily create valid HMAC-signed initData without the real bot token,
         # we test the validation logic by mocking scenarios
-        init_data = "auth_date=1234567890&user={\"id\":8971338885}&hash=testhash123"
+        init_data = "auth_date=1234567890&user={\"id\":111111111}&hash=testhash123"
 
         # This will fail HMAC validation, but we're testing the structure
         result = validate_init_data(init_data, BOT_TOKEN)
@@ -142,7 +142,7 @@ class TestAuthContext:
         expires_at = auth_time + timedelta(seconds=READ_FRESHNESS_SECONDS)
 
         context = AuthContext(
-            telegram_user_id=8971338885,
+            telegram_user_id=111111111,
             username="testuser",
             first_name="Test",
             roles=[Role.OWNER, Role.VIEWER],
@@ -151,7 +151,7 @@ class TestAuthContext:
             session_fingerprint="abc123",
         )
 
-        assert context.telegram_user_id == 8971338885
+        assert context.telegram_user_id == 111111111
         assert context.username == "testuser"
         assert context.is_owner
         assert context.is_viewer
@@ -160,7 +160,7 @@ class TestAuthContext:
     def test_has_role(self):
         """Test role checking."""
         context = AuthContext(
-            telegram_user_id=8971338885,
+            telegram_user_id=111111111,
             username="testuser",
             first_name="Test",
             roles=[Role.OWNER, Role.VIEWER],
@@ -179,7 +179,7 @@ class TestAuthContext:
         expires_at = auth_time + timedelta(seconds=READ_FRESHNESS_SECONDS)
 
         context = AuthContext(
-            telegram_user_id=8971338885,
+            telegram_user_id=111111111,
             username="testuser",
             first_name="Test",
             roles=[Role.VIEWER],
@@ -197,7 +197,7 @@ class TestAuthContext:
         expires_at = auth_time + timedelta(seconds=READ_FRESHNESS_SECONDS)
 
         context = AuthContext(
-            telegram_user_id=8971338885,
+            telegram_user_id=111111111,
             username="testuser",
             first_name="Test",
             roles=[Role.OPERATOR],
@@ -215,7 +215,7 @@ class TestAuthContext:
         expires_at = auth_time + timedelta(seconds=READ_FRESHNESS_SECONDS)
 
         context = AuthContext(
-            telegram_user_id=8971338885,
+            telegram_user_id=111111111,
             username="testuser",
             first_name="Test",
             roles=[Role.VIEWER],
@@ -232,7 +232,7 @@ class TestRoleMapping:
 
     def test_owner_has_all_roles(self):
         """Test that owner has owner and viewer roles."""
-        roles = get_roles_for_user(8971338885)
+        roles = get_roles_for_user(111111111)
 
         assert Role.OWNER in roles
         assert Role.VIEWER in roles
@@ -244,8 +244,8 @@ class TestRoleMapping:
         assert roles == []
 
     def test_owner_identity_preserved(self):
-        """Test that owner identity 8971338885 is preserved."""
-        roles = get_roles_for_user(8971338885)
+        """Test that owner identity 111111111 is preserved."""
+        roles = get_roles_for_user(111111111)
 
         assert Role.OWNER in roles
 
@@ -256,7 +256,7 @@ class TestGetAuthenticatedUser:
     @pytest.mark.asyncio
     async def test_valid_auth_with_tma_header(self):
         """Test successful authentication with Authorization: tma header."""
-        init_data = create_valid_init_data(BOT_TOKEN, user_id=8971338885, age_seconds=60)
+        init_data = create_valid_init_data(BOT_TOKEN, user_id=111111111, age_seconds=60)
 
         # Create mock request
         request = Mock(spec=Request)
@@ -266,10 +266,10 @@ class TestGetAuthenticatedUser:
         request.url.path = "/api/test"
 
         # Mock the auth function to return success
-        with patch('app.core.auth_secure.validate_init_data', return_value={"auth_date": str(int(time.time())), "user": '{"id":8971338885,"first_name":"Test"}'}):
+        with patch('app.core.auth_secure.validate_init_data', return_value={"auth_date": str(int(time.time())), "user": '{"id":111111111,"first_name":"Test"}'}):
             context = await get_authenticated_user(request, for_write=False)
 
-            assert context.telegram_user_id == 8971338885
+            assert context.telegram_user_id == 111111111
             assert context.is_owner
 
     @pytest.mark.asyncio
@@ -290,7 +290,7 @@ class TestGetAuthenticatedUser:
     @pytest.mark.asyncio
     async def test_wrong_auth_scheme(self):
         """Test rejection of wrong auth scheme (Bearer instead of tma)."""
-        init_data = create_valid_init_data(BOT_TOKEN, user_id=8971338885, age_seconds=60)
+        init_data = create_valid_init_data(BOT_TOKEN, user_id=111111111, age_seconds=60)
 
         request = Mock(spec=Request)
         request.headers = {"Authorization": f"Bearer {init_data}"}
@@ -343,7 +343,7 @@ class TestGetAuthenticatedUser:
     async def test_stale_auth_for_write(self):
         """Test rejection of stale auth for write operations."""
         # Auth data older than 5 minutes but within 15 minutes
-        init_data = create_valid_init_data(BOT_TOKEN, user_id=8971338885, age_seconds=WRITE_FRESHNESS_SECONDS + 60)
+        init_data = create_valid_init_data(BOT_TOKEN, user_id=111111111, age_seconds=WRITE_FRESHNESS_SECONDS + 60)
 
         request = Mock(spec=Request)
         request.headers = {"Authorization": f"tma {init_data}"}
@@ -351,7 +351,7 @@ class TestGetAuthenticatedUser:
         request.url = Mock()
         request.url.path = "/api/test"
 
-        with patch('app.core.auth_secure.validate_init_data', return_value={"auth_date": str(int(time.time() - WRITE_FRESHNESS_SECONDS - 60)), "user": '{"id":8971338885,"first_name":"Test"}'}):
+        with patch('app.core.auth_secure.validate_init_data', return_value={"auth_date": str(int(time.time() - WRITE_FRESHNESS_SECONDS - 60)), "user": '{"id":111111111,"first_name":"Test"}'}):
             with pytest.raises(HTTPException) as exc_info:
                 await get_authenticated_user(request, for_write=True)
 
@@ -362,7 +362,7 @@ class TestGetAuthenticatedUser:
         """Mock for successful auth."""
         from app.core.auth_secure import AuthContext, Role
         return AuthContext(
-            telegram_user_id=8971338885,
+            telegram_user_id=111111111,
             username="testuser",
             first_name="Test",
             roles=[Role.OWNER, Role.VIEWER],
@@ -380,7 +380,7 @@ class TestRequireRole:
         from app.core.auth_secure import AuthContext, Role
 
         context = AuthContext(
-            telegram_user_id=8971338885,
+            telegram_user_id=111111111,
             username="testuser",
             first_name="Test",
             roles=[Role.OWNER, Role.VIEWER],
@@ -399,7 +399,7 @@ class TestRequireRole:
         from app.core.auth_secure import AuthContext, Role
 
         context = AuthContext(
-            telegram_user_id=8971338885,
+            telegram_user_id=111111111,
             username="testuser",
             first_name="Test",
             roles=[Role.VIEWER],
@@ -423,7 +423,7 @@ class TestReplayProtection:
         _replay_cache.clear()
 
         # Create valid init data
-        init_data = create_valid_init_data(BOT_TOKEN, user_id=8971338885, age_seconds=60)
+        init_data = create_valid_init_data(BOT_TOKEN, user_id=111111111, age_seconds=60)
 
         request = Mock(spec=Request)
         request.headers = {"Authorization": f"tma {init_data}"}
@@ -439,7 +439,7 @@ class TestReplayProtection:
         # Simulate adding to cache
         from app.core.auth_secure import _cleanup_replay_cache, hashlib
         session_fingerprint = hashlib.sha256(
-            (init_data.split("hash=")[1].split("&")[0] + str(8971338885)).encode()
+            (init_data.split("hash=")[1].split("&")[0] + str(111111111)).encode()
         ).hexdigest()[:16]
         _replay_cache[session_fingerprint] = datetime.utcnow()
 

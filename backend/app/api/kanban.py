@@ -138,7 +138,7 @@ async def jira_comment(
 
 @router.get("/vikunja/tasks")
 async def vikunja_tasks(user = Depends(get_authenticated_user)):
-    """Get Vikunja tasks (Gregory's board)."""
+    """Get Vikunja tasks."""
     if not VIKUNJA_TOKEN:
         return {"tasks": [], "note": "Vikunja token not configured"}
 

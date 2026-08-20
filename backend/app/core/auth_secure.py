@@ -2,7 +2,7 @@
 
 Accepts initData only in Authorization: tma *** header.
 Rejects query-string auth and does not trust initDataUnsafe.
-Preserves identity 8971338885 as initial owner.
+Preserves the configured owner identity (MINIAPPS_OWNER_USER_ID) as initial owner.
 """
 
 import hmac
@@ -14,7 +14,7 @@ from typing import Optional
 from urllib.parse import parse_qsl
 from operator import itemgetter
 from fastapi import Request, HTTPException
-from .config import BOT_TOKEN, ALLOWED_USER_IDS
+from .config import BOT_TOKEN, ALLOWED_USER_IDS, OWNER_USER_ID
 from .audit import audit_store, AuditEvent, AuditOutcome, compute_request_fingerprint
 
 
@@ -27,9 +27,9 @@ class Role:
     OWNER = "owner"
 
 
-# Role mapping (initially only the owner)
+# Role mapping (initially only the configured owner)
 ROLE_MAPPING = {
-    8971338885: [Role.OWNER, Role.VIEWER],
+    OWNER_USER_ID: [Role.OWNER, Role.VIEWER],
 }
 
 # Freshness windows in seconds

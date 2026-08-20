@@ -136,7 +136,7 @@ async def mock_gitlab_missing_required_fields():
     """Fixture simulating GitLab response missing required fields."""
     async def mock_fetch():
         # Simulate response missing 'id' field
-        project_data = {"name": "homelab-ansible"}  # Missing 'last_activity_at'
+        project_data = {"name": "homelab-infra"}  # Missing 'last_activity_at'
         raise KeyError("last_activity_at")
 
     return mock_fetch
@@ -177,7 +177,7 @@ async def mock_gitlab_poisoned_pipeline():
             "sha": "<script>alert('xss')</script>abc12345",
             "ref": "main-$(rm -rf /)",
             "status": "success",
-            "web_url": "https://git.hively.dev/pipelines/123",
+            "web_url": "https://gitlab.example.com/pipelines/123",
             "created_at": "2026-07-26T12:00:00Z",
         }
 
@@ -194,7 +194,7 @@ async def mock_gitlab_poisoned_mr_title():
             "title": "'; DROP TABLE pipelines; --",
             "author": {"username": "attacker"},
             "source_branch": "malicious",
-            "web_url": "https://git.hively.dev/merge_requests/456",
+            "web_url": "https://gitlab.example.com/merge_requests/456",
             "merge_status": "can_be_merged",
             "updated_at": "2026-07-26T12:00:00Z",
         }
@@ -246,7 +246,7 @@ async def mock_prometheus_poisoned_metric():
 async def mock_gitlab_connection_error():
     """Fixture simulating GitLab network connection error."""
     async def mock_fetch():
-        raise httpx.ConnectError("Failed to establish connection to git.hively.dev")
+        raise httpx.ConnectError("Failed to establish connection to gitlab.example.com")
 
     return mock_fetch
 
@@ -255,7 +255,7 @@ async def mock_gitlab_connection_error():
 async def mock_prometheus_connection_error():
     """Fixture simulating Prometheus network connection error."""
     async def mock_fetch():
-        raise httpx.ConnectError("Failed to establish connection to 100.65.126.126:9090")
+        raise httpx.ConnectError("Failed to establish connection to 192.0.2.50:9090")
 
     return mock_fetch
 
@@ -273,7 +273,7 @@ def mock_gitlab_success_response():
         "sha": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
         "ref": "main",
         "status": "success",
-        "web_url": "https://git.hively.dev/pipelines/12345",
+        "web_url": "https://gitlab.example.com/pipelines/12345",
         "created_at": now.isoformat(),
         "updated_at": now.isoformat(),
     }
@@ -303,7 +303,7 @@ def mock_gitlab_project_metadata():
     now = datetime.now(timezone.utc)
     return {
         "id": 113,
-        "name": "homelab-ansible",
+        "name": "homelab-infra",
         "last_activity_at": now.isoformat(),
     }
 
@@ -332,7 +332,7 @@ def mock_gitlab_stale_data():
         "sha": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
         "ref": "main",
         "status": "success",
-        "web_url": "https://git.hively.dev/pipelines/12345",
+        "web_url": "https://gitlab.example.com/pipelines/12345",
         "created_at": old_time.isoformat(),
         "updated_at": old_time.isoformat(),
     }
@@ -368,7 +368,7 @@ def mock_gitlab_missing_timestamp():
         "sha": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
         "ref": "main",
         "status": "success",
-        "web_url": "https://git.hively.dev/pipelines/12345",
+        "web_url": "https://gitlab.example.com/pipelines/12345",
         # Missing created_at/updated_at
     }
 

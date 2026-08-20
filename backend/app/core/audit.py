@@ -31,7 +31,7 @@ class AuditEvent(BaseModel):
     event_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     correlation_id: str = Field(..., description="Correlation ID for request tracing")
     occurred_at: datetime = Field(default_factory=datetime.utcnow)
-    actor_id: str = Field(..., description="Actor identifier (e.g., 'telegram:8971338885' or 'system')")
+    actor_id: str = Field(..., description="Actor identifier (e.g., 'telegram:111111111' or 'system')")
     actor_roles: list[str] = Field(default_factory=list, description="Actor roles at time of event")
     action: str = Field(..., description="Action performed (e.g., 'source.read', 'auth.validate')")
     target_type: str = Field(..., description="Target type (e.g., 'source', 'app', 'user')")

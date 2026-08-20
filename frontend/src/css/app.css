@@ -1,4 +1,4 @@
-/* Homelab Mini Apps — Gregory Observatory design tokens */
+/* Homelab Mini Apps — Homelab Observatory design tokens */
 :root {
   /* Telegram theme foundation */
   --bg: var(--tg-theme-bg-color, #1c1c1e);
@@ -13,7 +13,7 @@
   --section-header: var(--tg-theme-section-header-text-color, #8e8e93);
   --separator: var(--tg-theme-section-separator-color, #38383a);
 
-  /* Gregory Observatory semantic tokens */
+  /* Homelab Observatory semantic tokens */
   --app-accent: #5b8def;
   --app-accent-soft: rgba(91, 141, 239, 0.14);
   --status-healthy: #30d158;

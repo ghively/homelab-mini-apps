@@ -1,4 +1,4 @@
-"""1Password Vault Browser — list/search items in the Gregory vault."""
+"""1Password Vault Browser — list/search items in the configured vault."""
 
 import asyncio
 import json
@@ -35,7 +35,7 @@ async def list_vaults(user = Depends(get_authenticated_user)):
 
 @router.get("/items")
 async def list_items(query: str = "", user = Depends(get_authenticated_user)):
-    """List items in the Gregory vault."""
+    """List items in the configured vault."""
     args = ["item", "list", "--vault", OP_VAULT, "--format=json"]
     out = await _op(*args)
     items = json.loads(out)

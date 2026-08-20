@@ -61,7 +61,7 @@ class TestSourceEnvelope:
             provenance=Provenance(
                 kind="https-api",
                 identity="gitlab-project-113",
-                safe_reference="https://git.hively.dev/api/v4/projects/113",
+                safe_reference="https://gitlab.example.com/api/v4/projects/113",
             ),
         )
 
