@@ -7,7 +7,7 @@ A secure Telegram Mini Apps platform for managing homelab infrastructure from yo
 ```
 ┌─────────────────────────────────────────────┐
 │  Telegram WebApp (Frontend)                 │
-│  HTML/CSS/JS + Gregory Observatory tokens   │
+│  HTML/CSS/JS + Homelab Observatory tokens   │
 │  ↕ Authorization: tma <initData>            │
 ├─────────────────────────────────────────────┤
 │  FastAPI Backend (Python 3.12)              │
@@ -66,22 +66,17 @@ Every data source returns a `SourceEnvelope[T]` — a normalized wrapper that ca
 
 ## Design System
 
-The **Gregory Observatory** design system provides:
+The **Homelab Observatory** design system (`frontend/src/css/app.css`) provides:
 
 - **Semantic status tokens**: `--status-healthy`, `--status-attention`, `--status-degraded`, `--status-critical`, `--status-unknown`, `--status-verified`, `--status-unverified`
 - **Telegram-native foundations**: All colors derive from `tg-theme-*` CSS variables, so the app automatically matches the user's Telegram theme (light/dark)
 - **Safe-area support**: `env(safe-area-inset-*)` handling for iPhone notch/home indicator
 - **System font stack**: No external font dependencies — uses the device's native UI font
 
-### TypeScript Design System Package
-
-Located in `frontend/packages/design-system/`, the TypeScript package provides:
-
-- Token definitions (`tokens/semantic.ts`, `tokens/telegram-themes.ts`)
-- Theme provider (`theme/provider.ts`)
-- Web components (theme-aware, safe-area, focus-trap, unsupported-client detection)
-- Client detection (`client/detector.ts`)
-- Accessibility provider (`accessibility/provider.ts`)
+This is the design system the running app actually uses. An earlier TypeScript
+package (`frontend/packages/design-system/`) explored the same tokens as web
+components, but was never wired into the app, so it was removed rather than
+left as dead weight — see `git log` for its history if you want to revisit it.
 
 ## Project Structure
 
@@ -97,9 +92,7 @@ homelab-mini-apps/
 │   │   │   ├── auth_secure.py # HMAC auth, replay protection, allowlist
 │   │   │   ├── envelope.py    # SourceEnvelope[T] contract
 │   │   │   ├── redaction.py   # Secret pattern redaction
-│   │   │   ├── registry.py    # App registry
 │   │   │   ├── audit.py       # Audit event logging
-│   │   │   ├── health.py      # Health checks
 │   │   │   ├── config.py      # Environment configuration
 │   │   │   └── auth.py        # Legacy auth (deprecated, use auth_secure)
 │   │   ├── api/
@@ -122,35 +115,23 @@ homelab-mini-apps/
 │       ├── test_auth.py
 │       ├── test_envelope.py
 │       ├── test_redaction.py
-│       ├── test_health.py
 │       └── test_swarm_monitor.py
 └── frontend/
     ├── index.html
-    ├── src/
-    │   ├── css/app.css        # Gregory Observatory design tokens + styles
-    │   └── js/
-    │       ├── app.js         # App shell, navigation, auth
-    │       ├── swarm.js       # Swarm Monitor view
-    │       ├── pipeline.js    # Pipeline view
-    │       ├── fleet.js       # Fleet view
-    │       ├── alerts.js      # Alerts view
-    │       ├── kanban.js      # Kanban view
-    │       ├── ops-remote.js  # Remote ops view
-    │       ├── onepassword.js # 1Password view
-    │       ├── smarthome.js   # Smart home view
-    │       ├── cost.js        # Cost view
-    │       └── wiki.js        # Wiki view
-    └── packages/
-        └── design-system/     # TypeScript design system package
-            ├── src/
-            │   ├── tokens/    # Semantic + Telegram theme tokens
-            │   ├── theme/     # Theme provider
-            │   ├── web-components/  # Custom elements
-            │   ├── accessibility/
-            │   ├── client/
-            │   ├── safe-area/
-            │   └── types/
-            └── tests/
+    └── src/
+        ├── css/app.css        # Homelab Observatory design tokens + styles
+        └── js/
+            ├── app.js         # App shell, navigation, auth
+            ├── swarm.js       # Swarm Monitor view
+            ├── pipeline.js    # Pipeline view
+            ├── fleet.js       # Fleet view
+            ├── alerts.js      # Alerts view
+            ├── kanban.js      # Kanban view
+            ├── ops-remote.js  # Remote ops view
+            ├── onepassword.js # 1Password view
+            ├── smarthome.js   # Smart home view
+            ├── cost.js        # Cost view
+            └── wiki.js        # Wiki view
 ```
 
 ## Environment Variables
@@ -159,17 +140,24 @@ homelab-mini-apps/
 |----------|----------|-------------|
 | `TELEGRAM_BOT_TOKEN` | Yes | Telegram bot token (from @BotFather) |
 | `MINIAPPS_ALLOWED_USERS` | Yes | Comma-separated Telegram user IDs allowed to access |
+| `MINIAPPS_OWNER_USER_ID` | No | Telegram user ID granted the OWNER role |
+| `MINIAPPS_PUBLIC_ORIGIN` | No | Public origin the app is served from (for CORS) |
 | `GITLAB_API_URL` | No | GitLab API base URL |
 | `GITLAB_TOKEN` | No | GitLab access token (read_api scope minimum) |
 | `HOMELAB_ANSIBLE_PROJECT_ID` | No | GitLab project ID for pipeline/MR features |
 | `PROMETHEUS_URL` | No | Prometheus URL for fleet metrics |
 | `GRAFANA_URL` | No | Grafana URL for dashboard links |
+| `ALERTMANAGER_URL` | No | Alertmanager URL for alert triage |
+| `UPTIME_KUMA_URL` | No | Uptime Kuma URL (reserved for future use) |
 | `HASS_URL` | No | Home Assistant URL |
 | `HASS_TOKEN` | No | Home Assistant long-lived token |
 | `OP_SERVICE_ACCOUNT_TOKEN` | No | 1Password service account token |
 | `OP_VAULT` | No | 1Password vault name |
 | `OUTLINE_URL` | No | Outline wiki URL |
 | `OUTLINE_TOKEN` | No | Outline API token |
+| `FLEET_HOSTS_JSON` | No | JSON object describing your fleet — see `core/config.py` for the shape |
+| `FLEET_SSH_USER` | No | SSH username used by Quick Ops Remote to reach fleet hosts |
+| `FLEET_LOCAL_HOST` | No | `FLEET_HOSTS_JSON` key for the host this app itself runs on |
 
 ## Local Development
 
@@ -186,16 +174,15 @@ python -m pytest tests/ -v
 
 ## Test Suite
 
-108 tests covering:
-- **Auth** (18 tests): HMAC verification, forged data rejection, stale auth rejection, replay protection
-- **Envelope** (16 tests): SourceEnvelope creation, serialization, fail-closed behavior
-- **Redaction** (20 tests): Secret pattern matching, JSON redaction, fixture leakage detection
-- **Health** (12 tests): Auth config validation, dependency checks
+88 tests covering:
+- **Auth** (29 tests): HMAC verification, forged data rejection, stale auth rejection, replay protection
+- **Envelope** (19 tests): SourceEnvelope creation, serialization, fail-closed behavior
+- **Redaction** (30 tests): Secret pattern matching, JSON redaction, fixture leakage detection
 - **Swarm Monitor** (10 tests): Adapter fail-closed contract, provenance, serialization
 
 ## Deployment
 
-This app is deployed as a Docker container behind Caddy (TLS termination). The homelab uses Ansible for deployment via the `homelab-ansible` repo's `docker_stack` role.
+This app is designed to run as a Docker container behind a reverse proxy that terminates TLS (e.g. Caddy or nginx). Deployment automation (Ansible, CI, etc.) is intentionally not part of this repo — wire it into whatever you already use to manage your fleet.
 
 For standalone deployment:
 
@@ -222,4 +209,4 @@ curl -sS "https://api.telegram.org/bot<TOKEN>/setChatMenuButton" \
 
 ## License
 
-Private — Homelab use only.
+MIT — see [LICENSE](LICENSE).
