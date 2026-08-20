@@ -4,12 +4,9 @@ import asyncio
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from ..core.auth_secure import get_authenticated_user
-from ..core.config import PROMETHEUS_URL
+from ..core.config import PROMETHEUS_URL, ALERTMANAGER_URL, UPTIME_KUMA_URL
 
 router = APIRouter()
-
-ALERTMANAGER_URL = "http://100.65.126.126:9093"
-UPTIME_KUMA_URL = "http://100.65.126.126:3001"
 
 
 @router.get("/active")

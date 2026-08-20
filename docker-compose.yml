@@ -8,22 +8,31 @@ services:
     ports:
       - "127.0.0.1:9876:9876"
     environment:
+      # All values below come from your .env file (or host environment) —
+      # nothing here defaults to a real hostname, IP, domain, or identity.
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - MINIAPPS_ALLOWED_USERS=8971338885
-      - PROMETHEUS_URL=http://100.65.126.126:9090
-      - GRAFANA_URL=http://100.65.126.126:3002
+      - MINIAPPS_ALLOWED_USERS=${MINIAPPS_ALLOWED_USERS}
+      - MINIAPPS_OWNER_USER_ID=${MINIAPPS_OWNER_USER_ID}
+      - MINIAPPS_PUBLIC_ORIGIN=${MINIAPPS_PUBLIC_ORIGIN}
+      - PROMETHEUS_URL=${PROMETHEUS_URL}
+      - GRAFANA_URL=${GRAFANA_URL}
+      - ALERTMANAGER_URL=${ALERTMANAGER_URL}
+      - UPTIME_KUMA_URL=${UPTIME_KUMA_URL}
       - HASS_URL=${HASS_URL}
       - HASS_TOKEN=${HASS_TOKEN}
-      - GITLAB_API_URL=https://git.hively.dev/api/v4
+      - GITLAB_API_URL=${GITLAB_API_URL}
       - GITLAB_TOKEN=${GITLAB_TOKEN}
-      - HOMELAB_ANSIBLE_PROJECT_ID=113
+      - HOMELAB_ANSIBLE_PROJECT_ID=${HOMELAB_ANSIBLE_PROJECT_ID:-113}
       - OP_SERVICE_ACCOUNT_TOKEN=${OP_SERVICE_ACCOUNT_TOKEN}
-      - OP_VAULT=Gregory
-      - OUTLINE_URL=https://doc.hively.dev/api
+      - OP_VAULT=${OP_VAULT}
+      - OUTLINE_URL=${OUTLINE_URL}
       - OUTLINE_TOKEN=${OUTLINE_API_TOKEN:-}
-      - JIRA_URL=https://hivelylabs.atlassian.net
-      - JIRA_EMAIL=genehively@gmail.com
+      - JIRA_URL=${JIRA_URL}
+      - JIRA_EMAIL=${JIRA_EMAIL}
       - JIRA_API_TOKEN=${JIRA_API_TOKEN:-}
+      - FLEET_HOSTS_JSON=${FLEET_HOSTS_JSON:-}
+      - FLEET_SSH_USER=${FLEET_SSH_USER:-}
+      - FLEET_LOCAL_HOST=${FLEET_LOCAL_HOST:-}
     volumes:
       # Wiki access (read-only)
       - ${HOME}/.hermes/wiki:/wiki:ro

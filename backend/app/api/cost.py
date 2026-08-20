@@ -8,6 +8,10 @@ from fastapi import APIRouter, Depends
 from ..core.auth_secure import get_authenticated_user
 from ..core.config import PROMETHEUS_URL, SESSION_DB
 
+# Instance-label match for the host tracked by the OCI free-tier endpoint below.
+# Set via env var — no real instance/IP fragment ships as a default.
+OCI_INSTANCE_MATCH = os.environ.get("OCI_INSTANCE_MATCH", ".*oci-host.*")
+
 router = APIRouter()
 
 
@@ -131,20 +135,20 @@ async def model_usage(user = Depends(get_authenticated_user)):
 
 @router.get("/oci")
 async def oci_resources(user = Depends(get_authenticated_user)):
-    """Get OCI free tier resource usage (gh-arm)."""
+    """Get OCI free tier resource usage for the configured host."""
     # Disk is the constrained resource on OCI free tier
     disk = await prom_query(
-        '100 * (1 - (node_filesystem_avail_bytes{instance=~".*126.126.*",mountpoint="/"} / node_filesystem_size_bytes{instance=~".*126.126.*",mountpoint="/"}))'
+        f'100 * (1 - (node_filesystem_avail_bytes{{instance=~"{OCI_INSTANCE_MATCH}",mountpoint="/"}} / node_filesystem_size_bytes{{instance=~"{OCI_INSTANCE_MATCH}",mountpoint="/"}}))'
     )
     cpu = await prom_query(
-        '100 - (avg(rate(node_cpu_seconds_total{instance=~".*126.126.*",mode="idle"}[5m])) * 100)'
+        f'100 - (avg(rate(node_cpu_seconds_total{{instance=~"{OCI_INSTANCE_MATCH}",mode="idle"}}[5m])) * 100)'
     )
     mem = await prom_query(
-        '100 * (1 - (node_memory_MemAvailable_bytes{instance=~".*126.126.*"} / node_memory_MemTotal_bytes{instance=~".*126.126.*"}))'
+        f'100 * (1 - (node_memory_MemAvailable_bytes{{instance=~"{OCI_INSTANCE_MATCH}"}} / node_memory_MemTotal_bytes{{instance=~"{OCI_INSTANCE_MATCH}"}}))'
     )
 
     return {
-        "gh-arm": {
+        "oci-host": {
             "disk_pct": round(float(disk), 1),
             "cpu_pct": round(float(cpu), 1),
             "mem_pct": round(float(mem), 1),

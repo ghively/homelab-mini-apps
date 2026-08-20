@@ -5,7 +5,7 @@ import datetime
 import httpx
 from fastapi import APIRouter, Depends
 from ..core.auth_secure import get_authenticated_user
-from ..core.config import PROMETHEUS_URL
+from ..core.config import PROMETHEUS_URL, FLEET_HOSTS
 
 router = APIRouter()
 
@@ -37,19 +37,19 @@ def _extract_ip(instance: str) -> str:
     return instance.split(":")[0] if ":" in instance else instance
 
 
-# IP → friendly hostname mapping
-IP_MAP = {
-    "100.92.162.32": "gh-ai",
-    "100.65.126.126": "gh-arm",
-    "100.116.221.84": "gh-git",
-    "100.97.166.81": "gh-mac",
-    "100.116.139.100": "gh-media",
-    "100.88.26.95": "gh-nvidia",
-    "192.168.0.165": "gh-media",
-    "192.168.0.167": "gh-mac",
-    "192.168.0.196": "gh-storage",
-    "localhost": "gh-ai",
-}
+# IP → friendly hostname mapping, derived from the configured fleet (no
+# infrastructure values are hardcoded here — see core.config.FLEET_HOSTS).
+def _build_ip_map() -> dict:
+    mapping = {}
+    for name, info in FLEET_HOSTS.items():
+        for key in ("ip", "ts"):
+            value = info.get(key)
+            if value:
+                mapping[value] = name
+    return mapping
+
+
+IP_MAP = _build_ip_map()
 
 
 @router.get("/overview")

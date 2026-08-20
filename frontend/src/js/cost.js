@@ -12,15 +12,16 @@ async function renderCost(content) {
     let html = '';
 
     // OCI free tier status
-    html += '<div class="section"><div class="section-title">OCI Free Tier (gh-arm)</div>';
+    const ociHost = oci['oci-host'];
+    html += '<div class="section"><div class="section-title">OCI Free Tier</div>';
     html += '<div class="card">';
-    html += `<div class="list-item"><div class="info"><div class="title">Disk</div></div><div style="color:${pctColor(oci['gh-arm'].disk_pct)}">${oci['gh-arm'].disk_pct}%</div></div>`;
-    html += `${progress(oci['gh-arm'].disk_pct)}`;
-    html += `<div class="list-item"><div class="info"><div class="title">CPU</div></div><div style="color:${pctColor(oci['gh-arm'].cpu_pct)}">${oci['gh-arm'].cpu_pct}%</div></div>`;
-    html += `${progress(oci['gh-arm'].cpu_pct)}`;
-    html += `<div class="list-item"><div class="info"><div class="title">Memory</div></div><div style="color:${pctColor(oci['gh-arm'].mem_pct)}">${oci['gh-arm'].mem_pct}%</div></div>`;
-    html += `${progress(oci['gh-arm'].mem_pct)}`;
-    html += `<div class="subtitle" style="margin-top:8px">${oci['gh-arm'].compute_limit}</div>`;
+    html += `<div class="list-item"><div class="info"><div class="title">Disk</div></div><div style="color:${pctColor(ociHost.disk_pct)}">${ociHost.disk_pct}%</div></div>`;
+    html += `${progress(ociHost.disk_pct)}`;
+    html += `<div class="list-item"><div class="info"><div class="title">CPU</div></div><div style="color:${pctColor(ociHost.cpu_pct)}">${ociHost.cpu_pct}%</div></div>`;
+    html += `${progress(ociHost.cpu_pct)}`;
+    html += `<div class="list-item"><div class="info"><div class="title">Memory</div></div><div style="color:${pctColor(ociHost.mem_pct)}">${ociHost.mem_pct}%</div></div>`;
+    html += `${progress(ociHost.mem_pct)}`;
+    html += `<div class="subtitle" style="margin-top:8px">${ociHost.compute_limit}</div>`;
     html += '</div></div>';
 
     // Network

@@ -1,15 +1,16 @@
 """Homelab Mini Apps Hub — unified Telegram Mini App platform.
 
-Serves 9 mini apps under a single FastAPI backend:
-  1. IaC Pipeline Approval Gate
-  2. Fleet Health Dashboard
-  3. Jira OPS Kanban Board
-  4. Alert Triage Console
-  5. Quick Ops Remote
-  6. 1Password Vault Browser
-  7. Smart Home Control
-  8. Cost/Quota Monitor
-  9. Wiki/Knowledge Reader
+Serves 10 mini apps under a single FastAPI backend:
+  1. Swarm Monitor (GitLab + Prometheus fail-closed source envelopes)
+  2. IaC Pipeline Approval Gate
+  3. Fleet Health Dashboard
+  4. Jira OPS Kanban Board
+  5. Alert Triage Console
+  6. Quick Ops Remote
+  7. 1Password Vault Browser
+  8. Smart Home Control
+  9. Cost/Quota Monitor
+  10. Wiki/Knowledge Reader
 """
 
 import os
@@ -22,6 +23,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.core.auth_secure import get_authenticated_user, AuthContext
+from app.core.config import MINIAPPS_PUBLIC_ORIGIN
 from app.api import (
     fleet,
     pipeline,
@@ -45,7 +47,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Homelab Mini Apps Hub",
-    description="Unified Telegram Mini App platform for Gene's homelab",
+    description="Unified Telegram Mini App platform for a homelab",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -54,7 +56,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://miniapps.hively.dev",
+        MINIAPPS_PUBLIC_ORIGIN,
         "https://web.telegram.org",
         "https://k.web.telegram.org",
     ],

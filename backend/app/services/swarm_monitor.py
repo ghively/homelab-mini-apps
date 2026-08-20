@@ -33,7 +33,7 @@ async def fetch_gitlab(
 ) -> SourceEnvelope:
     """Fetch latest pipeline status from GitLab project."""
     token = os.environ.get("GITLAB_TOKEN")
-    base_url = os.environ.get("GITLAB_API_URL", "https://git.hively.dev/api/v4")
+    base_url = os.environ.get("GITLAB_API_URL", "https://gitlab.example.com/api/v4")
     observed_at = datetime.now(timezone.utc)
 
     if not token:
@@ -158,7 +158,7 @@ async def fetch_gitlab(
 
 async def fetch_prometheus(
     client: httpx.AsyncClient,
-    prometheus_url: str = "http://gh-arm:9090",
+    prometheus_url: str = "http://192.0.2.50:9090",
 ) -> SourceEnvelope:
     """Fetch fleet health metrics from Prometheus."""
     observed_at = datetime.now(timezone.utc)

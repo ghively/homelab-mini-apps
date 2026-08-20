@@ -5,13 +5,13 @@ import httpx
 import subprocess
 from fastapi import APIRouter, Depends, HTTPException
 from ..core.auth_secure import get_authenticated_user
-from ..core.config import FLEET_HOSTS
+from ..core.config import FLEET_HOSTS, FLEET_SSH_USER, FLEET_LOCAL_HOST
 
 router = APIRouter()
 
-# Predefined safe actions per host
+# Predefined safe actions per host (keys must match core.config.FLEET_HOSTS)
 ACTIONS = {
-    "gh-ai": {
+    "app-server": {
         "restart_container:stalwart": {
             "cmd": "docker restart stalwart",
             "desc": "Restart Stalwart mail server",
@@ -39,7 +39,7 @@ ACTIONS = {
         "disk_usage": {"cmd": "df -h / | tail -1", "desc": "Disk usage"},
         "memory": {"cmd": "free -h", "desc": "Memory info"},
     },
-    "gh-arm": {
+    "monitor-server": {
         "restart_container:monitoring-grafana": {
             "cmd": "docker restart monitoring-grafana",
             "desc": "Restart Grafana",
@@ -63,7 +63,7 @@ ACTIONS = {
         "disk_usage": {"cmd": "df -h / | tail -1", "desc": "Disk usage"},
         "memory": {"cmd": "free -h", "desc": "Memory info"},
     },
-    "gh-git": {
+    "git-server": {
         "gitlab_status": {
             "cmd": "sudo gitlab-ctl status",
             "desc": "GitLab service status",
@@ -71,7 +71,7 @@ ACTIONS = {
         "disk_usage": {"cmd": "df -h / | tail -1", "desc": "Disk usage"},
         "memory": {"cmd": "free -h", "desc": "Memory info"},
     },
-    "gh-media": {
+    "media-server": {
         "docker_ps": {
             "cmd": "docker ps --format 'table {{.Names}}\\t{{.Status}}\\t{{.Ports}}'",
             "desc": "List running containers",
@@ -83,7 +83,7 @@ ACTIONS = {
             "desc": "Restart Home Assistant",
         },
     },
-    "gh-nvidia": {
+    "gpu-server": {
         "gpu_info": {
             "cmd": "nvidia-smi --query-gpu=name,memory.total,memory.used,memory.free,utilization.gpu --format=csv",
             "desc": "GPU status",
@@ -139,7 +139,7 @@ async def execute_action(
     # Determine if local or remote
     host_info = FLEET_HOSTS.get(host, {})
     target_ip = host_info.get("ts") or host_info.get("ip", "")
-    is_local = target_ip in ("localhost", "100.92.162.32")
+    is_local = host == FLEET_LOCAL_HOST or target_ip == "localhost"
 
     try:
         if is_local:
@@ -157,7 +157,7 @@ async def execute_action(
                 "ConnectTimeout=5",
                 "-o",
                 "StrictHostKeyChecking=no",
-                f"ghively@{target_ip}",
+                f"{FLEET_SSH_USER}@{target_ip}",
                 cmd,
             ]
             proc = await asyncio.create_subprocess_exec(
